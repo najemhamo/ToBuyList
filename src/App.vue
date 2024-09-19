@@ -1,56 +1,66 @@
 <script setup>
-// ref : to handle the state
-// onMounted : to handle the local storge when the page is reloaded
-// computed : to handle computed properties
-// watch : will watch the changes in the state
 import { ref, onMounted, computed, watch } from "vue";
 
 const toBuyItems = ref([]);
 const name = ref("");
-
 const input_content = ref("");
 const input_category = ref(null);
 
+// To sort items by creation date in descending order
 const ItemsList_asc = computed(() =>
-  toBuyItems.value.sort((a, b) => {
-    return a.createdAt - b.createdAt;
-  })
+  toBuyItems.value.sort((a, b) => b.createdAt - a.createdAt)
 );
 
-// To add the name to the local storage
+// Watch for changes to name and save to localStorage
 watch(name, (newVal) => {
   localStorage.setItem("name", newVal);
 });
 
+// Watch for changes to the toBuyItems and save to localStorage
 watch(
   toBuyItems,
   (newVal) => {
     localStorage.setItem("toBuyItems", JSON.stringify(newVal));
   },
-  {
-    deep: true,
-  }
+  { deep: true }
 );
 
+// Function to add an item to the list
 const addToBuyList = () => {
   if (input_content.value.trim() === "" || input_category.value === null) {
     return;
   }
 
-  toBuyItems.value.push({
-    content: input_content.value,
-    category: input_category.value,
-    done: false,
-    editable: false,
-    createdAt: new Date().getTime(),
-  });
+  const existingItem = toBuyItems.value.find(
+    (item) => item.content.toLowerCase() === input_content.value.toLowerCase()
+  );
+
+  if (existingItem) {
+    // If item exists, increase its quantity
+    existingItem.quantity++;
+  } else {
+    // If item does not exist, add a new one with quantity 1
+    toBuyItems.value.push({
+      content: input_content.value,
+      category: input_category.value,
+      done: false,
+      editable: false,
+      createdAt: new Date().getTime(),
+      quantity: 1,
+    });
+  }
+
+  // Clear the input fields
+  input_content.value = "";
+  input_category.value = null;
 };
 
+// Function to remove an item from the list
 const removeToBuyItem = (item) => {
   toBuyItems.value = toBuyItems.value.filter((t) => t !== item);
 };
 
-// To save the data when the page is reloaded
+// Load data from localStorage when the page is mounted
 onMounted(() => {
   name.value = localStorage.getItem("name") || "";
   toBuyItems.value = JSON.parse(localStorage.getItem("toBuyItems")) || [];
@@ -80,7 +90,6 @@ onMounted(() => {
         />
 
         <h4>Pick a priority</h4>
-
         <div class="options">
           <label>
             <input
@@ -127,6 +136,15 @@ onMounted(() => {
 
           <div class="tobuy-content">
             <input type="text" v-model="item.content" />
+            <div class="quantity-field">
+              <label>Quantity:</label>
+              <input
+                type="number"
+                v-model.number="item.quantity"
+                min="1"
+                class="quantity-input"
+              />
+            </div>
           </div>
 
           <div class="actions">

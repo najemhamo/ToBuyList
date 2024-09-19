@@ -230,3 +230,14 @@ input:checked ~ .bubble::after {
   text-decoration: line-through;
   color: var(--grey);
 }
+
+.quantity-field {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.quantity-input {
+  width: 60px;
+  margin-left: 10px;
+}
